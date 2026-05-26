@@ -1,4 +1,4 @@
-import WebSockets from "ws";
+const WebSocket = require("ws");
 
 //creating the websocket server
 const wss = new WebSocket.Server({ port: 8080 });
@@ -27,11 +27,26 @@ wss.on("connection", (ws) => {
 
         //Add this client to the room
         rooms.get(roomCode).add(ws);
-
+        ws.roomCode = roomCode; //store which room the client belongs to
         console.log(`Client added to the room: ${roomCode}`);
 
-        ws.send(`You joined the room: ${roomCode}`);
+        ws.send(JSON.stringify({ type: "joined", room: roomCode }));
       }
+
+      //handle clipboard messages 
+      else if (data.type === "clipboard" && data.text){
+        if (!ws.roomCode) return;
+        const roomCode = ws.roomCode;
+        if (roomCode && rooms.has(roomCode)) {
+          for (const client of rooms.get(roomCode)) {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({ type: "clipboard", text: data.text }));
+            }
+          }
+          console.log(`Broadcasted clipboard text to room ${roomCode}`);
+        }
+      }
+
     } catch (err) {
       console.error("Invalid message format", err);
     }
