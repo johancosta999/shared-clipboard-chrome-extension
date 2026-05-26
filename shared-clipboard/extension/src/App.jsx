@@ -9,6 +9,7 @@ function App() {
   const [receivedText, setReceivedText] = useState("");
 
   useEffect(() => {
+    if (!chrome?.runtime) return;
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === "clipboard") {
         setReceivedText(message.text);
@@ -33,10 +34,7 @@ function App() {
   };
 
   const createRoom = () => {
-    const newCode = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase();
+    const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     setRoomCode(newCode);
 
