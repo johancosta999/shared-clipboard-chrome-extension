@@ -1,47 +1,29 @@
-import { useState } from "react";
+/* global chrome */
+
+import { useEffect, useState } from "react";
 
 function App() {
   const [roomCode, setRoomCode] = useState("");
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("");
   const [receivedText, setReceivedText] = useState("");
-  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === "clipboard") {
+        setReceivedText(message.text);
+      }
+    });
+  }, []);
 
   const connectToRoom = (code) => {
-    const socket = new WebSocket("ws://localhost:8080");
+    chrome.runtime.sendMessage({
+      type: "join",
+      room: code,
+    });
 
-    socket.onopen = () => {
-      socket.send(
-        JSON.stringify({
-          type: "join",
-          room: code,
-        })
-      );
-    };
-
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
-      if (data.type === "joined") {
-        setConnected(true);
-        setStatus(`Joined room ${code}`);
-      }
-
-      if (data.type === "clipboard") {
-        setReceivedText(data.text);
-      }
-    };
-
-    socket.onerror = () => {
-      setStatus("Connection error");
-    };
-
-    socket.onclose = () => {
-      setConnected(false);
-      setStatus("Disconnected");
-    };
-
-    setWs(socket);
+    setConnected(true);
+    setStatus(`Joined room ${code}`);
   };
 
   const joinRoom = () => {
@@ -62,15 +44,10 @@ function App() {
   };
 
   const leaveRoom = () => {
-    if (ws) {
-      ws.close();
-    }
-
     setRoomCode("");
     setConnected(false);
     setStatus("");
     setReceivedText("");
-    setWs(null);
   };
 
   const copyText = async () => {
