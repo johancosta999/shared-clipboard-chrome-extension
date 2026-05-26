@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Shared Clipboard",
+  "version": "1.0",
+  "description": "A real-time shared clipboard extension using WebSockets.",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite",
+    "storage"
+  ]
+}

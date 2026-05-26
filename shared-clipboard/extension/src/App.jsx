@@ -1,122 +1,133 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [roomCode, setRoomCode] = useState("");
+  const [connected, setConnected] = useState(false);
+  const [status, setStatus] = useState("");
+  const [receivedText, setReceivedText] = useState("");
+  const [ws, setWs] = useState(null);
+
+  const connectToRoom = (code) => {
+    const socket = new WebSocket("ws://localhost:8080");
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: "join",
+          room: code,
+        })
+      );
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "joined") {
+        setConnected(true);
+        setStatus(`Joined room ${code}`);
+      }
+
+      if (data.type === "clipboard") {
+        setReceivedText(data.text);
+      }
+    };
+
+    socket.onerror = () => {
+      setStatus("Connection error");
+    };
+
+    socket.onclose = () => {
+      setConnected(false);
+      setStatus("Disconnected");
+    };
+
+    setWs(socket);
+  };
+
+  const joinRoom = () => {
+    if (!roomCode.trim()) return;
+
+    connectToRoom(roomCode);
+  };
+
+  const createRoom = () => {
+    const newCode = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase();
+
+    setRoomCode(newCode);
+
+    connectToRoom(newCode);
+  };
+
+  const leaveRoom = () => {
+    if (ws) {
+      ws.close();
+    }
+
+    setRoomCode("");
+    setConnected(false);
+    setStatus("");
+    setReceivedText("");
+    setWs(null);
+  };
+
+  const copyText = async () => {
+    if (!receivedText) return;
+
+    await navigator.clipboard.writeText(receivedText);
+
+    alert("Copied to clipboard!");
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <h1>Clipboard Sync</h1>
+
+      {connected ? (
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+          <p>{status}</p>
 
-      <div className="ticks"></div>
+          <div
+            style={{
+              border: "1px solid gray",
+              padding: "20px",
+              minHeight: "100px",
+              marginBottom: "20px",
+            }}
+          >
+            {receivedText || "Waiting for clipboard..."}
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <button onClick={copyText} style={{ marginRight: "10px" }}>
+            Copy
+          </button>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <button onClick={leaveRoom}>Leave Room</button>
+        </div>
+      ) : (
+        <div>
+          <input
+            type="text"
+            placeholder="Enter Room Code"
+            value={roomCode}
+            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            style={{
+              padding: "10px",
+              marginRight: "10px",
+            }}
+          />
+
+          <button onClick={joinRoom} style={{ marginRight: "10px" }}>
+            Join Room
+          </button>
+
+          <button onClick={createRoom}>Create Room</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
