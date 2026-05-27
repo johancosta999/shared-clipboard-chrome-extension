@@ -24,7 +24,7 @@ function App() {
     });
 
     setConnected(true);
-    setStatus(`Joined room ${code}`);
+    setStatus(`${code}`);
   };
 
   const joinRoom = () => {
@@ -58,11 +58,11 @@ function App() {
 
   return (
     <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Clipboard Sync</h1>
+      <h1>CopyMate</h1>
 
       {connected ? (
         <div>
-          <p>{status}</p>
+          <p>Joined room <b style={{color: "green"}}>{status}</b>  (Send this code to your friend to join.)</p>
 
           <div
             style={{
