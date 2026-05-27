@@ -1,7 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Shared Clipboard",
+  "name": "CopyMate by Johan Costa",
   "version": "1.0",
+  "icons": {
+    "16": "favicon.png",
+    "48": "favicon.png",
+    "128": "favicon.png"
+  },
   "description": "A real-time shared clipboard extension using WebSockets.",
   "action": {},
   "background": {
