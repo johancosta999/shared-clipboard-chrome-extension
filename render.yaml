@@ -2,7 +2,7 @@ services:
   - type: web
     name: copymate-server
     runtime: node
-    rootDir: server
+    rootDir: shared-clipboard/server
     buildCommand: npm install
     startCommand: node index.js
     envVars:
