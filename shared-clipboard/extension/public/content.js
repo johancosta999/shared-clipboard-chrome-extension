@@ -9,9 +9,9 @@ document.addEventListener("copy", () => {
         type: "clipboard",
         text: text,
       });
-    } catch (err) {
+    } catch {
       // Extension was reloaded, context is gone — ignore silently
-      console.error(err);
+      
     }
   }
 });

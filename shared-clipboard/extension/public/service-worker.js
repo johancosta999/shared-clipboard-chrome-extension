@@ -7,22 +7,13 @@ function connectToRoom(roomCode) {
   socket = new WebSocket("ws://localhost:8080");
 
   socket.onopen = () => {
-    socket.send(
-      JSON.stringify({
-        type: "join",
-        room: roomCode,
-      })
-    );
+    socket.send(JSON.stringify({ type: "join", room: roomCode }));
   };
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-
     if (data.type === "clipboard") {
-      chrome.runtime.sendMessage({
-        type: "clipboard",
-        text: data.text,
-      });
+      chrome.runtime.sendMessage({ type: "clipboard", text: data.text });
     }
   };
 
@@ -41,22 +32,23 @@ chrome.runtime.onMessage.addListener((message) => {
 
   if (message.type === "clipboard") {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(
-        JSON.stringify({
-          type: "clipboard",
-          room: currentRoom,
-          text: message.text,
-        })
-      );
+      socket.send(JSON.stringify({
+        type: "clipboard",
+        room: currentRoom,
+        text: message.text,
+      }));
     }
+  }
+
+  if (message.type === "leave") {
+    if (socket) socket.close();
   }
 });
 
-chrome.action.onClicked.addListener(() => {
-  chrome.windows.create({
-    url: "index.html",
-    type: "popup",
-    width: 400,
-    height: 600,
-  });
-});
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
+setInterval(() => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "ping" }));
+  }
+}, 25000);

@@ -16,8 +16,12 @@
   "permissions": [
     "clipboardRead",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
+  "side_panel": {
+    "default_path": "index.html"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
