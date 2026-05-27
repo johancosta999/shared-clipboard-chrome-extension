@@ -4,7 +4,7 @@ let socket = null;
 let currentRoom = null;
 
 function connectToRoom(roomCode) {
-  socket = new WebSocket("ws://localhost:8080");
+  socket = new WebSocket("wss://copymat-server.onrender.com");
 
   socket.onopen = () => {
     socket.send(JSON.stringify({ type: "join", room: roomCode }));
